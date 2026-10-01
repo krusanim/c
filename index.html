@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="th"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ฝึกทำโจทย์ - โมเมนตัมและการชน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --ink:#161A22; --sub:#5B6472; --line:#E3E6EB; --bg:#F6F7F9; --card:#FFFFFF;
+ --accent:#2448D6; --accent-ink:#FFFFFF; --good:#1C8A4B; --good-bg:#E9F7EF;
+ --bad:#C23B2E; --bad-bg:#FDEEEC; --radius:14px;
+ padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+ :root:not([data-theme="light"]){--ink:#EDEFF3;--sub:#9AA3B2;--line:#2A2F3A;--bg:#10131A;--card:#171B24;--good-bg:#113322;--bad-bg:#3A1A17;}
+}
+:root[data-theme="dark"]{--ink:#EDEFF3;--sub:#9AA3B2;--line:#2A2F3A;--bg:#10131A;--card:#171B24;--good-bg:#113322;--bad-bg:#3A1A17;}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',system-ui,-apple-system,sans-serif;
+ -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);
+ padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px}
+.topbar h1{margin:0 0 8px;font-size:15px;font-weight:600;letter-spacing:.2px}
+.progwrap{display:flex;align-items:center;gap:10px}
+.progtrack{flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+.progfill{height:100%;background:var(--accent);border-radius:4px;transition:width .35s ease}
+.progtext{font-size:12.5px;color:var(--sub);white-space:nowrap;min-width:58px;text-align:right}
+main{flex:1;max-width:620px;margin:0 auto;width:100%;padding:18px 16px 110px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:14px}
+.tag{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);background:color-mix(in srgb, var(--accent) 12%, transparent);
+ padding:3px 9px;border-radius:999px;margin-bottom:10px}
+.statement{font-size:14.5px;line-height:1.6;color:var(--ink)}
+.sectitle{font-size:12.5px;font-weight:600;color:var(--sub);margin:4px 0 10px;text-transform:none}
+.field{margin-bottom:12px}
+.flabel{font-size:13.5px;line-height:1.5;margin-bottom:6px;color:var(--ink)}
+.flabel .raw{color:var(--sub)}
+.formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;color:var(--sub);
+ background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.55}
+.inputrow{display:flex;align-items:center;gap:8px}
+input[type=text]{flex:1;min-width:0;font-size:16px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+ padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+ outline:none;transition:border-color .15s}
+input[type=text]:focus{border-color:var(--accent)}
+input.correct{border-color:var(--good);background:var(--good-bg)}
+input.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.unit{font-size:13.5px;color:var(--sub);min-width:34px}
+.fb{font-size:12.5px;margin-top:5px}
+.fb.good{color:var(--good)}
+.fb.bad{color:var(--bad)}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.resultbox{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:13.5px;color:var(--sub);display:none}
+.resultbox.show{display:block}
+.resultbox b{color:var(--ink)}
+.bottombar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
+ padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;max-width:620px;margin:0 auto;
+ right:0;left:0}
+.bbinner{display:flex;gap:8px;max-width:620px;margin:0 auto;width:100%}
+button{font-family:inherit;font-size:14.5px;font-weight:600;border:none;border-radius:10px;padding:12px 14px;cursor:pointer;
+ -webkit-tap-highlight-color:transparent}
+.btn-nav{background:var(--bg);color:var(--ink);border:1px solid var(--line);flex:0 0 auto;width:46px}
+.btn-check{background:var(--accent);color:var(--accent-ink);flex:1}
+.btn-check:active{opacity:.85}
+.listwrap{padding:4px 2px 2px}
+.probrow{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.probrow:last-child{border-bottom:none}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:0 0 auto}
+.dot.done{background:var(--good)}
+.dot.partial{background:#D9A72B}
+.probinfo{flex:1;min-width:0}
+.probid{font-size:12px;color:var(--sub);font-family:ui-monospace,monospace}
+.probtitle{font-size:14.5px;color:var(--ink)}
+.chev{color:var(--sub);font-size:14px}
+.topactions{display:flex;justify-content:flex-end;padding:0 2px 6px}
+.linkbtn{background:none;border:none;color:var(--sub);font-size:12.5px;padding:4px;text-decoration:underline;cursor:pointer}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+ <h1 id="pageTitle">ฝึกทำโจทย์ — บทที่ 1 โมเมนตัมและการชน</h1>
+ <div class="progwrap">
+  <div class="progtrack"><div class="progfill" id="progFill" style="width:0%"></div></div>
+  <div class="progtext" id="progText">0 / 8 ข้อ</div>
+ </div>
+</div>
+
+<main id="mainArea"></main>
+
+<div class="bottombar" id="bottomBar"></div>
+
+<script>
+const STORE_KEY = "physicsPracticeCh1";
+
+const DATA = [
+{id:"1.1", title:"เบสบอลถูกตี", statement:"นักกีฬาขว้างลูกเบสบอลมวล 140 g ด้วยความเร็ว 35.0 m/s ไปทาง +x เข้าหาผู้ตี จากนั้นถูกตีกลับไปทาง −x ด้วยความเร็ว 56.0 m/s สัมผัสไม้นาน 4.5 ms",
+ given:[
+  {label:"มวลลูกบอล m", raw:"140 g", key:"g0", ans:0.140, unit:"kg"},
+  {label:"เวลาสัมผัส Δt", raw:"4.5 ms", key:"g1", ans:0.0045, unit:"s"}
+ ],
+ parts:[
+  {label:"(ก) การดล", formula:"J = m(v_f − v_i) = 0.140 × [(−56.0) − (35.0)]", key:"p0", ans:-12.74, unit:"N·s", tol:0.1},
+  {label:"(ข) แรงเฉลี่ย", formula:"F = J / Δt = (−12.74) / (0.0045)", key:"p1", ans:-2830, unit:"N", tol:20}
+ ]},
+{id:"1.2", title:"ลูกเทนนิสชนกำแพง", statement:"ลูกเทนนิสมวล 60 กรัม เข้าชนกำแพงด้วยอัตราเร็ว 20 m/s แล้วกระดอนออกด้วยอัตราเร็ว 18 m/s สัมผัสกำแพงนาน 0.02 s (กำหนดทิศออกจากกำแพงเป็นบวก)",
+ given:[{label:"มวลลูกเทนนิส m", raw:"60 g", key:"g0", ans:0.060, unit:"kg"}],
+ parts:[{label:"แรงดล J", formula:"J = m(v − u) = 0.060 × [(18) − (−20)]", key:"p0", ans:2.28, unit:"N·s", tol:0.05}]},
+{id:"1.3", title:"รถทดลองชนแล้วติดกัน", statement:"รถทดลอง A มวล 500 g เคลื่อนที่บนพื้นลื่นด้วยความเร็ว 10 m/s ชนรถ B (มวลเท่ากัน หยุดนิ่ง) หลังชนติดกันไป หาพลังงานจลน์ที่สูญเสีย",
+ given:[
+  {label:"มวล m₁ (รถ A)", raw:"500 g", key:"g0", ans:0.5, unit:"kg"},
+  {label:"มวล m₂ (รถ B)", raw:"500 g", key:"g1", ans:0.5, unit:"kg"}
+ ],
+ parts:[
+  {label:"ความเร็วร่วมหลังชน", formula:"v = (m₁u₁ + m₂u₂)/(m₁+m₂) = (0.5×10 + 0.5×0) / 1.0", key:"p0", ans:5, unit:"m/s", tol:0.1},
+  {label:"พลังงานจลน์ที่สูญเสีย", formula:"ΔKE = ½(0.5)(10)² − ½(1.0)(5)²", key:"p1", ans:12.5, unit:"J", tol:0.2}
+ ]},
+{id:"1.4", title:"ชนกันแล้วหาความเร็ว", statement:"m₁=500 g, m₂=300 g เคลื่อนที่เข้าหากันด้วย u₁=+1 m/s, u₂=−2 m/s หลังชนพบว่า v₂=+2 m/s",
+ given:[
+  {label:"มวล m₁", raw:"500 g", key:"g0", ans:0.5, unit:"kg"},
+  {label:"มวล m₂", raw:"300 g", key:"g1", ans:0.3, unit:"kg"}
+ ],
+ parts:[
+  {label:"(ก) ความเร็ว v₁ หลังชน", formula:"0.5(1) + 0.3(−2) = 0.5v₁ + 0.3(2)", key:"p0", ans:-1.4, unit:"m/s", tol:0.05},
+  {label:"(ข) ผลต่างพลังงานจลน์ (หลัง−ก่อน)", formula:"ΔKE = KE_หลัง − KE_ก่อน  (≈0 แปลว่ายืดหยุ่น)", key:"p1", ans:0.24, unit:"J", tol:0.05}
+ ]},
+{id:"1.5", title:"กระสุนฝังแท่งไม้ติดสปริง", statement:"กระสุนมวล 10 g ยิงด้วย 450 m/s ฝังในแท่งไม้ 3 kg (นิ่งบนพื้นลื่น) ผูกสปริง k=100 N/m หาระยะอัดสปริงมากสุด",
+ given:[{label:"มวลกระสุน m", raw:"10 g", key:"g0", ans:0.01, unit:"kg"}],
+ parts:[
+  {label:"ความเร็วร่วมหลังฝัง V", formula:"0.01 × 450 = (0.01 + 3) × V", key:"p0", ans:1.495, unit:"m/s", tol:0.02},
+  {label:"ระยะอัดสปริงสูงสุด x", formula:"½(3.01)V² = ½(100)x²", key:"p1", ans:0.259, unit:"m", tol:0.01}
+ ]},
+{id:"1.6", title:"กระสุนฝังเป้ามีแรงเสียดทาน", statement:"กระสุน 0.2 kg พุ่งด้วย 200 m/s ฝังในเป้า 100 kg, μ_k=0.5, g=10 m/s² หาระยะที่เป้าไถลได้ไกลสุด",
+ given:[],
+ parts:[
+  {label:"ความเร็วร่วมหลังฝัง V", formula:"0.2 × 200 = (0.2 + 100) × V", key:"p0", ans:0.399, unit:"m/s", tol:0.01},
+  {label:"ระยะไถล x", formula:"a = μg = 5 m/s² , 0 = V² − 2ax", key:"p1", ans:0.0159, unit:"m", tol:0.002}
+ ]},
+{id:"1.7", title:"ชนแล้วติดกันไปอัดสปริง", statement:"m₁=6 kg, u₁=6.325 m/s บนพื้นลื่น ชน m₂=2 kg (นิ่ง ติดสปริง k=400 N/m) แล้วติดกันไป หา x สูงสุด",
+ given:[],
+ parts:[
+  {label:"ความเร็วร่วมหลังชน V", formula:"6 × 6.325 = (6+2) × V", key:"p0", ans:4.744, unit:"m/s", tol:0.02},
+  {label:"ระยะอัดสปริงสูงสุด x", formula:"½(8)V² = ½(400)x²", key:"p1", ans:0.671, unit:"m", tol:0.02}
+ ]},
+{id:"1.8", title:"ลูกตุ้มกระสุน", statement:"กระสุน 20 g ยิงเข้าแท่งไม้ 6 kg ที่แขวนนิ่ง แกว่งสูงขึ้น 10 cm, g=10 m/s² หาอัตราเร็วกระสุนก่อนชน",
+ given:[
+  {label:"มวลกระสุน m", raw:"20 g", key:"g0", ans:0.02, unit:"kg"},
+  {label:"ความสูงที่แกว่งขึ้น h", raw:"10 cm", key:"g1", ans:0.10, unit:"m"}
+ ],
+ parts:[
+  {label:"ความเร็วทันทีหลังชน V", formula:"V = √(2gh) = √(2 × 10 × 0.10)", key:"p0", ans:1.414, unit:"m/s", tol:0.02},
+  {label:"ความเร็วกระสุนก่อนชน v", formula:"0.02 × v = (0.02 + 6) × 1.414", key:"p1", ans:426, unit:"m/s", tol:5}
+ ]}
+];
+
+let state = {idx:-1, answers:{}, checked:{}};
+
+function load(){
+ try{
+  const raw = localStorage.getItem(STORE_KEY);
+  if(raw){ const s = JSON.parse(raw); if(s && s.answers) state = Object.assign(state, s); }
+ }catch(e){}
+}
+function save(){
+ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function allFields(prob){
+ return [...prob.given.map(g=>({...g, _part:false})), ...prob.parts.map(p=>({...p, _part:true}))];
+}
+
+function evalProblem(prob){
+ const ans = (state.answers[prob.id]||{});
+ const fields = allFields(prob);
+ let correct = 0;
+ fields.forEach(f=>{
+  const v = parseFloat(ans[f.key]);
+  const tol = f.tol!==undefined ? f.tol : Math.max(Math.abs(f.ans)*0.03, 0.01);
+  if(!isNaN(v) && Math.abs(v - f.ans) <= tol) correct++;
+ });
+ return {correct, total: fields.length};
+}
+
+function renderTop(){
+ const total = DATA.length;
+ let done = 0;
+ DATA.forEach(p=>{ const r = evalProblem(p); if(state.checked[p.id] && r.correct===r.total) done++; });
+ document.getElementById('progFill').style.width = (done/total*100)+'%';
+ document.getElementById('progText').textContent = done+' / '+total+' ข้อ';
+}
+
+function fieldHTML(prob, f){
+ const val = (state.answers[prob.id] && state.answers[prob.id][f.key]) || '';
+ const checked = state.checked[prob.id];
+ let cls = '';
+ let fb = '';
+ if(checked && val!==''){
+  const v = parseFloat(val);
+  const tol = f.tol!==undefined ? f.tol : Math.max(Math.abs(f.ans)*0.03, 0.01);
+  const ok = !isNaN(v) && Math.abs(v - f.ans) <= tol;
+  cls = ok ? 'correct' : 'wrong';
+  fb = ok ? '<div class="fb good">ถูกต้อง</div>' : '<div class="fb bad">ยังไม่ถูก — คำตอบคือ '+f.ans+' '+f.unit+'</div>';
+ }
+ const formulaHtml = f.formula ? '<div class="formula">'+f.formula+'</div>' : '';
+ const labelHtml = (f.raw!==undefined) ? (f.label+' = <span class="raw">'+f.raw+' =</span>') : f.label;
+ return '<div class="field">'+
+  '<div class="flabel">'+labelHtml+'</div>'+
+  formulaHtml+
+  '<div class="inputrow">'+
+   '<input type="text" inputmode="decimal" class="'+cls+'" data-prob="'+prob.id+'" data-key="'+f.key+'" value="'+val+'" placeholder="ใส่ตัวเลข">'+
+   '<span class="unit">'+f.unit+'</span>'+
+  '</div>'+fb+
+ '</div>';
+}
+
+function renderProblem(prob){
+ const idx = DATA.findIndex(p=>p.id===prob.id);
+ let html = '<div class="card">';
+ html += '<span class="tag">ข้อ '+prob.id+'</span>';
+ html += '<div class="statement">'+prob.statement+'</div>';
+ html += '</div>';
+
+ html += '<div class="card">';
+ html += '<div class="sectitle">กำหนด (แปลงหน่วยให้ถูกก่อน)</div>';
+ if(prob.given.length===0){
+  html += '<div class="flabel" style="color:var(--sub)">ค่าที่ให้มาเป็นหน่วย SI อยู่แล้ว ไม่ต้องแปลง</div>';
+ } else {
+  prob.given.forEach(g=>{ html += fieldHTML(prob, g); });
+ }
+ html += '</div>';
+
+ html += '<div class="card">';
+ html += '<div class="sectitle">วิธีทำ — ใส่ผลลัพธ์แต่ละขั้น</div>';
+ prob.parts.forEach((p,i)=>{
+  html += fieldHTML(prob, p);
+  if(i < prob.parts.length-1) html += '<div class="divider"></div>';
+ });
+ const r = evalProblem(prob);
+ const showResult = state.checked[prob.id];
+ html += '<div class="resultbox'+(showResult?' show':'')+'">คะแนนข้อนี้: <b>'+r.correct+' / '+r.total+'</b> ช่อง</div>';
+ html += '</div>';
+
+ return html;
+}
+
+function renderList(){
+ let html = '<div class="topactions"><button class="linkbtn" id="clearBtn">ล้างข้อมูลทั้งหมด</button></div>';
+ html += '<div class="card listwrap">';
+ DATA.forEach((p,i)=>{
+  const r = evalProblem(p);
+  const checked = state.checked[p.id];
+  let dotCls = '';
+  if(checked && r.correct===r.total) dotCls='done';
+  else if(checked || r.correct>0) dotCls='partial';
+  html += '<div class="probrow" data-idx="'+i+'">'+
+   '<div class="dot '+dotCls+'"></div>'+
+   '<div class="probinfo"><div class="probid">ข้อ '+p.id+'</div><div class="probtitle">'+p.title+'</div></div>'+
+   '<div class="chev">›</div>'+
+  '</div>';
+ });
+ html += '</div>';
+ return html;
+}
+
+function render(){
+ const main = document.getElementById('mainArea');
+ const bottom = document.getElementById('bottomBar');
+ const pageTitle = document.getElementById('pageTitle');
+
+ if(state.idx === -1){
+  pageTitle.textContent = 'ฝึกทำโจทย์ — บทที่ 1 โมเมนตัมและการชน';
+  main.innerHTML = renderList();
+  bottom.innerHTML = '';
+  bottom.style.display = 'none';
+  document.querySelectorAll('.probrow').forEach(row=>{
+   row.addEventListener('click', ()=>{ state.idx = parseInt(row.dataset.idx); save(); render(); });
+  });
+ } else {
+  const prob = DATA[state.idx];
+  pageTitle.textContent = 'ข้อ '+prob.id+' — '+prob.title;
+  main.innerHTML = renderProblem(prob);
+  bottom.style.display = 'flex';
+  bottom.innerHTML = '<div class="bbinner">'+
+   '<button class="btn-nav" id="prevBtn" '+(state.idx===0?'disabled style="opacity:.4"':'')+'>‹</button>'+
+   '<button class="btn-check" id="checkBtn">ตรวจคำตอบ</button>'+
+   '<button class="btn-nav" id="nextBtn" '+(state.idx===DATA.length-1?'disabled style="opacity:.4"':'')+'>›</button>'+
+  '</div>';
+
+  main.querySelectorAll('input').forEach(inp=>{
+   inp.addEventListener('input', ()=>{
+    const pid = inp.dataset.prob, key = inp.dataset.key;
+    if(!state.answers[pid]) state.answers[pid] = {};
+    state.answers[pid][key] = inp.value;
+    state.checked[pid] = false;
+    save();
+   });
+  });
+
+  document.getElementById('checkBtn').addEventListener('click', ()=>{
+   state.checked[prob.id] = true;
+   save(); render(); renderTop();
+  });
+  const back = document.createElement('button');
+  document.getElementById('prevBtn').addEventListener('click', ()=>{ if(state.idx>0){ state.idx--; save(); render(); } });
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ if(state.idx<DATA.length-1){ state.idx++; save(); render(); } });
+ }
+ renderTop();
+}
+
+document.addEventListener('click', (e)=>{
+ if(e.target && e.target.id==='clearBtn'){
+  try{ localStorage.removeItem(STORE_KEY); }catch(err){}
+  state = {idx:-1, answers:{}, checked:{}};
+  render();
+ }
+});
+
+load();
+if(state.idx===undefined) state.idx = -1;
+render();
+</script>
+</body></html>
