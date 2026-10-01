@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.8/dist/notiflix-aio-3.2.8.min.js"></script>
 <style>
 :root{
  --ink:#161A22; --sub:#5B6472; --line:#E3E6EB; --bg:#F6F7F9; --card:#FFFFFF;
@@ -69,6 +70,11 @@ button{font-family:inherit;font-size:14.5px;font-weight:600;border:none;border-r
 .dot{width:9px;height:9px;border-radius:50%;background:var(--line);flex:0 0 auto}
 .dot.done{background:var(--good)}
 .dot.partial{background:#D9A72B}
+.dot.revealed{background:#9AA3B2}
+.btn-giveup{width:100%;background:transparent;color:var(--bad);border:1.5px solid var(--bad);margin-top:6px}
+.revealtag{display:inline-block;font-size:11.5px;color:var(--sub);background:var(--bg);border:1px solid var(--line);
+ border-radius:6px;padding:2px 7px;margin-left:8px}
+.attemptnote{font-size:12px;color:var(--sub);margin-top:2px}
 .probinfo{flex:1;min-width:0}
 .probid{font-size:12px;color:var(--sub);font-family:ui-monospace,monospace}
 .probtitle{font-size:14.5px;color:var(--ink)}
@@ -155,17 +161,45 @@ const DATA = [
  ]}
 ];
 
-let state = {idx:-1, answers:{}, checked:{}};
+let state = {idx:-1, answers:{}, checked:{}, attempts:{}, revealed:{}};
 
 function load(){
  try{
   const raw = localStorage.getItem(STORE_KEY);
   if(raw){ const s = JSON.parse(raw); if(s && s.answers) state = Object.assign(state, s); }
  }catch(e){}
+ if(!state.attempts) state.attempts = {};
+ if(!state.revealed) state.revealed = {};
 }
 function save(){
  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
 }
+
+try{
+ if(window.Notiflix){
+  Notiflix.Notify.init({
+   position:'center-top', distance:'14px', borderRadius:'10px',
+   timeout:2600, fontFamily:'Sarabun, sans-serif', fontSize:'14px', cssAnimationStyle:'from-top'
+  });
+ }
+}catch(e){}
+function notify(type, msg){
+ if(window.Notiflix && Notiflix.Notify && Notiflix.Notify[type]){ Notiflix.Notify[type](msg); }
+}
+
+const ENCOURAGE = [
+ "ยังไม่ถูกครับ ลองทบทวนสูตรแล้วทำใหม่อีกครั้ง",
+ "เกือบแล้ว ลองตรวจหน่วยกับเครื่องหมายอีกที",
+ "ไม่เป็นไร สู้ต่อ ลองคำนวณใหม่อีกรอบ",
+ "ยังไม่ตรง ลองดูขั้นตอนการแทนค่าอีกครั้ง",
+ "พยายามได้ดีแล้ว ลองอีกครั้งนะ",
+ "ใกล้แล้ว ตรวจทานตัวเลขอีกสักนิด"
+];
+const SUCCESS_MSG = [
+ "ถูกต้อง ทำได้ดีมาก",
+ "เยี่ยมมาก ตอบถูกทุกช่อง",
+ "ถูกต้องครบถ้วน เก่งมาก"
+];
 
 function allFields(prob){
  return [...prob.given.map(g=>({...g, _part:false})), ...prob.parts.map(p=>({...p, _part:true}))];
@@ -192,16 +226,23 @@ function renderTop(){
 }
 
 function fieldHTML(prob, f){
- const val = (state.answers[prob.id] && state.answers[prob.id][f.key]) || '';
+ const revealed = state.revealed[prob.id];
+ let val = (state.answers[prob.id] && state.answers[prob.id][f.key]) || '';
  const checked = state.checked[prob.id];
  let cls = '';
  let fb = '';
- if(checked && val!==''){
+ let disabled = '';
+ if(revealed){
+  val = String(f.ans);
+  cls = 'correct';
+  disabled = 'disabled';
+  fb = '<div class="fb good">เฉลย: '+f.ans+' '+f.unit+'</div>';
+ } else if(checked && val!==''){
   const v = parseFloat(val);
   const tol = f.tol!==undefined ? f.tol : Math.max(Math.abs(f.ans)*0.03, 0.01);
   const ok = !isNaN(v) && Math.abs(v - f.ans) <= tol;
   cls = ok ? 'correct' : 'wrong';
-  fb = ok ? '<div class="fb good">ถูกต้อง</div>' : '<div class="fb bad">ยังไม่ถูก — คำตอบคือ '+f.ans+' '+f.unit+'</div>';
+  fb = ok ? '<div class="fb good">ถูกต้อง</div>' : '<div class="fb bad">ยังไม่ถูก ลองใหม่อีกครั้ง</div>';
  }
  const formulaHtml = f.formula ? '<div class="formula">'+f.formula+'</div>' : '';
  const labelHtml = (f.raw!==undefined) ? (f.label+' = <span class="raw">'+f.raw+' =</span>') : f.label;
@@ -209,7 +250,7 @@ function fieldHTML(prob, f){
   '<div class="flabel">'+labelHtml+'</div>'+
   formulaHtml+
   '<div class="inputrow">'+
-   '<input type="text" inputmode="decimal" class="'+cls+'" data-prob="'+prob.id+'" data-key="'+f.key+'" value="'+val+'" placeholder="ใส่ตัวเลข">'+
+   '<input type="text" inputmode="decimal" '+disabled+' class="'+cls+'" data-prob="'+prob.id+'" data-key="'+f.key+'" value="'+val+'" placeholder="ใส่ตัวเลข">'+
    '<span class="unit">'+f.unit+'</span>'+
   '</div>'+fb+
  '</div>';
@@ -238,8 +279,18 @@ function renderProblem(prob){
   if(i < prob.parts.length-1) html += '<div class="divider"></div>';
  });
  const r = evalProblem(prob);
- const showResult = state.checked[prob.id];
- html += '<div class="resultbox'+(showResult?' show':'')+'">คะแนนข้อนี้: <b>'+r.correct+' / '+r.total+'</b> ช่อง</div>';
+ const showResult = state.checked[prob.id] || state.revealed[prob.id];
+ const solved = r.correct===r.total;
+ const attempts = state.attempts[prob.id] || 0;
+ html += '<div class="resultbox'+(showResult?' show':'')+'">คะแนนข้อนี้: <b>'+r.correct+' / '+r.total+'</b> ช่อง'+
+  (state.revealed[prob.id] ? '<span class="revealtag">ดูเฉลยแล้ว</span>' : '')+
+  '</div>';
+ if(!solved && !state.revealed[prob.id] && attempts>0){
+  html += '<div class="attemptnote">ส่งผิดแล้ว '+attempts+' ครั้ง'+(attempts<3 ? (' (ลองได้อีก '+(3-attempts)+' ครั้งก่อนขอดูเฉลย)') : '')+'</div>';
+ }
+ if(!solved && !state.revealed[prob.id] && attempts>=3){
+  html += '<button class="btn-giveup" id="giveupBtn">ยอมแพ้ ดูเฉลย</button>';
+ }
  html += '</div>';
 
  return html;
@@ -253,6 +304,7 @@ function renderList(){
   const checked = state.checked[p.id];
   let dotCls = '';
   if(checked && r.correct===r.total) dotCls='done';
+  else if(state.revealed[p.id]) dotCls='revealed';
   else if(checked || r.correct>0) dotCls='partial';
   html += '<div class="probrow" data-idx="'+i+'">'+
    '<div class="dot '+dotCls+'"></div>'+
@@ -281,10 +333,13 @@ function render(){
   const prob = DATA[state.idx];
   pageTitle.textContent = 'ข้อ '+prob.id+' — '+prob.title;
   main.innerHTML = renderProblem(prob);
+  const isRevealed = !!state.revealed[prob.id];
   bottom.style.display = 'flex';
   bottom.innerHTML = '<div class="bbinner">'+
    '<button class="btn-nav" id="prevBtn" '+(state.idx===0?'disabled style="opacity:.4"':'')+'>‹</button>'+
-   '<button class="btn-check" id="checkBtn">ตรวจคำตอบ</button>'+
+   (isRevealed
+    ? '<button class="btn-check" id="checkBtn">ข้อถัดไป</button>'
+    : '<button class="btn-check" id="checkBtn">ตรวจคำตอบ</button>')+
    '<button class="btn-nav" id="nextBtn" '+(state.idx===DATA.length-1?'disabled style="opacity:.4"':'')+'>›</button>'+
   '</div>';
 
@@ -299,10 +354,28 @@ function render(){
   });
 
   document.getElementById('checkBtn').addEventListener('click', ()=>{
+   if(state.revealed[prob.id]){
+    if(state.idx<DATA.length-1){ state.idx++; save(); render(); }
+    return;
+   }
    state.checked[prob.id] = true;
+   const r = evalProblem(prob);
+   if(r.correct===r.total){
+    notify('success', SUCCESS_MSG[Math.floor(Math.random()*SUCCESS_MSG.length)]);
+   } else {
+    state.attempts[prob.id] = (state.attempts[prob.id]||0) + 1;
+    notify('failure', ENCOURAGE[Math.floor(Math.random()*ENCOURAGE.length)]);
+   }
    save(); render(); renderTop();
   });
-  const back = document.createElement('button');
+  const giveupBtn = document.getElementById('giveupBtn');
+  if(giveupBtn){
+   giveupBtn.addEventListener('click', ()=>{
+    state.revealed[prob.id] = true;
+    notify('info', 'นี่คือเฉลย ลองทำความเข้าใจวิธีคิดแต่ละขั้นดูนะครับ');
+    save(); render(); renderTop();
+   });
+  }
   document.getElementById('prevBtn').addEventListener('click', ()=>{ if(state.idx>0){ state.idx--; save(); render(); } });
   document.getElementById('nextBtn').addEventListener('click', ()=>{ if(state.idx<DATA.length-1){ state.idx++; save(); render(); } });
  }
@@ -312,7 +385,8 @@ function render(){
 document.addEventListener('click', (e)=>{
  if(e.target && e.target.id==='clearBtn'){
   try{ localStorage.removeItem(STORE_KEY); }catch(err){}
-  state = {idx:-1, answers:{}, checked:{}};
+  state = {idx:-1, answers:{}, checked:{}, attempts:{}, revealed:{}};
+  notify('info', 'ล้างข้อมูลทั้งหมดแล้ว');
   render();
  }
 });
